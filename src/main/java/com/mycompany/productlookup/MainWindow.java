@@ -12,14 +12,18 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -33,6 +37,7 @@ public class MainWindow extends javax.swing.JFrame {
     public MainWindow() {
         initComponents();
         getConnection();
+        showProductsInJTable();
     }
     
     String imagePath = null;
@@ -84,6 +89,54 @@ public class MainWindow extends javax.swing.JFrame {
         return image;
     }
     
+    //Display data in JTable
+    //Fill ArrayList with data
+    public ArrayList<Product> getProductList(){
+        ArrayList<Product> productList = new ArrayList();
+        PreparedStatement ps = null;
+        Connection con = getConnection();
+        String query = "SELECT * from shoeproducts";
+        Statement st;
+        ResultSet rs;
+        
+        try {
+            st = con.createStatement();
+            rs=st.executeQuery(query);
+            Product product;
+            while(rs.next()){
+                product = new Product(rs.getInt("id"),rs.getString("name"),Float.parseFloat(rs.getString("price")),rs.getString("add_date"),rs.getBytes("image"));
+                productList.add(product);
+            }
+        }
+        catch(SQLException ex){
+            Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return productList;
+    }
+            
+    //Populate JTable
+    public void showProductsInJTable(){
+        ArrayList<Product> arrayList = getProductList();
+        DefaultTableModel model = (DefaultTableModel)jTable_Products.getModel();
+          
+        // clear jtable
+        model.setRowCount(0);
+        
+        Object[] row = new Object[4];// 6 the number of columns
+        
+        for(int i = 0; i < arrayList.size(); i++)
+        {
+            row[0] = arrayList.get(i).getId();
+            row[1] = arrayList.get(i).getName();
+            row[2] = arrayList.get(i).getPrice();
+            row[3] = arrayList.get(i).getAddDate();
+            
+            model.addRow(row);
+        }
+        
+    }
+    
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -107,17 +160,17 @@ public class MainWindow extends javax.swing.JFrame {
         txt_price = new javax.swing.JTextArea();
         lblImage = new javax.swing.JLabel();
         jScrollPane6 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        jTable_Products = new javax.swing.JTable();
         jLabel8 = new javax.swing.JLabel();
-        txt_AddDate = new com.toedter.calendar.JDateChooser();
         Btn_Choose_Image = new javax.swing.JButton();
         btnInsert = new javax.swing.JButton();
         btnUpdate = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
+        btnDelete = new javax.swing.JButton();
         jButton5 = new javax.swing.JButton();
         jButton6 = new javax.swing.JButton();
         jButton7 = new javax.swing.JButton();
         jButton8 = new javax.swing.JButton();
+        txt_AddDate = new com.toedter.calendar.JDateChooser();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -150,7 +203,7 @@ public class MainWindow extends javax.swing.JFrame {
         lblImage.setBackground(new java.awt.Color(204, 204, 255));
         lblImage.setOpaque(true);
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        jTable_Products.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
                 {null, null, null, null},
@@ -161,7 +214,7 @@ public class MainWindow extends javax.swing.JFrame {
                 "ID", "Name", "Price", "Add Date"
             }
         ));
-        jScrollPane6.setViewportView(jTable1);
+        jScrollPane6.setViewportView(jTable_Products);
 
         jLabel8.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel8.setText("Add Date: ");
@@ -187,10 +240,10 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
-        jButton4.setText("Delete");
-        jButton4.addActionListener(new java.awt.event.ActionListener() {
+        btnDelete.setText("Delete");
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4ActionPerformed(evt);
+                btnDeleteActionPerformed(evt);
             }
         });
 
@@ -268,7 +321,7 @@ public class MainWindow extends javax.swing.JFrame {
                 .addGap(28, 28, 28)
                 .addComponent(btnUpdate, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(29, 29, 29)
-                .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btnDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -292,8 +345,10 @@ public class MainWindow extends javax.swing.JFrame {
                             .addGap(18, 18, 18)
                             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                 .addComponent(jLabel8)
-                                .addComponent(txt_AddDate, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGap(74, 74, 74)
+                                .addGroup(jPanel1Layout.createSequentialGroup()
+                                    .addGap(3, 3, 3)
+                                    .addComponent(txt_AddDate, javax.swing.GroupLayout.PREFERRED_SIZE, 106, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                 .addComponent(lblImage, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addComponent(jLabel5)))
@@ -311,7 +366,7 @@ public class MainWindow extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnInsert)
                     .addComponent(btnUpdate)
-                    .addComponent(jButton4))
+                    .addComponent(btnDelete))
                 .addContainerGap(328, Short.MAX_VALUE))
         );
 
@@ -348,7 +403,7 @@ public class MainWindow extends javax.swing.JFrame {
                 ps.setBlob(4,img);
                 ps.executeUpdate();
                 JOptionPane.showMessageDialog(null, "Data saved");
-                
+                showProductsInJTable();
                 
             }
             catch(Exception ex){
@@ -418,9 +473,27 @@ public class MainWindow extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnUpdateActionPerformed
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton4ActionPerformed
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        PreparedStatement ps = null;
+        Connection con = getConnection();
+        
+        if(!(txt_id.getText().equals(""))){
+            try {
+                ps = con.prepareStatement("DELETE from shoeproducts " 
+                        + "WHERE id=?");
+                ps.setInt(1,Integer.parseInt(txt_id.getText()));
+                ps.executeUpdate();
+                JOptionPane.showMessageDialog(null, "Product Deleted");
+            } catch (SQLException ex) {
+                Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                JOptionPane.showMessageDialog(null, "Product Not Deleted");
+            }
+        }
+        else{
+            JOptionPane.showMessageDialog(null, "ID does not exist");
+        }
+        
+    }//GEN-LAST:event_btnDeleteActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
         // TODO add your handling code here:
@@ -494,9 +567,9 @@ public class MainWindow extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton Btn_Choose_Image;
+    private javax.swing.JButton btnDelete;
     private javax.swing.JButton btnInsert;
     private javax.swing.JButton btnUpdate;
-    private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton7;
@@ -512,7 +585,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JTable jTable1;
+    private javax.swing.JTable jTable_Products;
     private javax.swing.JLabel lblImage;
     private com.toedter.calendar.JDateChooser txt_AddDate;
     private javax.swing.JTextArea txt_id;
